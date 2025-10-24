@@ -1,0 +1,252 @@
+/* Reset y base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: #0f0f1b;
+  color: #e0e0ff;
+  padding: 16px;
+  font-size: 18px;
+}
+
+/* Encabezado */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #4a4a8a;
+}
+
+header h1 {
+  font-size: 28px;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.day-selector .btn {
+  background: #2a2a4a;
+  color: #d0d0ff;
+  border: 1px solid #5a5a8a;
+  padding: 8px 16px;
+  margin-left: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.day-selector .btn.active {
+  background: #4a4a8a;
+  color: white;
+}
+
+/* Pestañas */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  background: #1e1e3a;
+  color: #b0b0e0;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.tab.active {
+  background: #2d2d5a;
+  color: #ffffff;
+  border-bottom: 3px solid #00f0ff;
+}
+
+/* Contenido */
+.content {
+  background: #15152a;
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 600px;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+h2 {
+  margin-bottom: 16px;
+  color: #a0a0ff;
+}
+
+h3 {
+  margin: 24px 0 12px 0;
+  color: #80c0ff;
+  font-size: 22px;
+}
+
+h4 {
+  margin: 18px 0 10px 0;
+  color: #70b0ff;
+  font-size: 20px;
+}
+
+/* Botón de regreso */
+.btn-back {
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background: #4a4a8a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.btn-back:hover {
+  background: #5a5a9a;
+}
+
+/* Tablas */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  display: block;
+}
+
+.data-table th,
+.data-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #2a2a4a;
+  white-space: nowrap;
+}
+
+.data-table th {
+  color: #80d0ff;
+  font-weight: bold;
+  background: #1a1a35;
+}
+
+.data-table tr:hover {
+  background: #1f1f3f;
+}
+
+/* Filtros de mapa */
+.map-filters {
+  margin-bottom: 20px;
+}
+
+.map-btn {
+  background: #2a2a4a;
+  color: #c0c0ff;
+  border: 1px solid #4a4a7a;
+  padding: 6px 14px;
+  margin-right: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.map-btn.active {
+  background: #00f0ff;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Highlights */
+.highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.highlight-card {
+  background: #1e1e3a;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  border-left: 4px solid #00f0ff;
+}
+
+.highlight-card strong {
+  font-size: 24px;
+  color: #00f0ff;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.highlight-card em {
+  color: #b0b0ff;
+  font-style: normal;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  header { flex-direction: column; gap: 12px; }
+  .tabs { flex-wrap: wrap; }
+  .data-table {
+    font-size: 14px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 8px 6px;
+  }
+  h2 { font-size: 22px; }
+  h3 { font-size: 20px; }
+  h4 { font-size: 18px; }
+}
+
+/* Contenedor para tablas muy anchas */
+#team-player-stats {
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+#team-player-stats .data-table {
+  min-width: 1000px; /* Ajusta según el contenido */
+}
+/* ... resto del CSS sin cambios ... */
+
+/* Selector de idioma */
+.lang-selector {
+  display: flex;
+  gap: 4px;
+  margin-right: 16px;
+}
+
+.lang-btn {
+  background: #2a2a4a;
+  color: #d0d0ff;
+  border: 1px solid #5a5a8a;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.lang-btn.active {
+  background: #4a4a8a;
+  color: white;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
