@@ -722,7 +722,7 @@ function renderTeamDetail(teamId) {
   document.getElementById("team-player-stats").innerHTML = html;
 }
 
-function setupEventListeners() {
+  function setupEventListeners() {
   // Idioma
   document.getElementById('lang-es').addEventListener('click', () => setLanguage('es'));
   document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
@@ -747,25 +747,22 @@ function setupEventListeners() {
     });
   });
 
-  // Clic en equipo
-  document.getElementById("teams-body").addEventListener("click", (e) => {
-    const row = e.target.closest("tr");
+  // Clic en equipo — USANDO DELEGACIÓN EN UN CONTENEDOR ESTABLE
+  document.querySelector('.content').addEventListener("click", (e) => {
+    const row = e.target.closest("#teams-body tr");
     if (row && row.dataset.teamId) {
       renderTeamDetail(row.dataset.teamId);
     }
   });
 
   // Botón de regreso
-  const backBtn = document.getElementById("back-to-teams");
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      document.querySelector('.tab[data-tab="teams"]').classList.add("active");
-      document.getElementById("teams").classList.add("active");
-      updateTabContent('teams');
-    });
-  }
+  document.getElementById("back-to-teams").addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector('.tab[data-tab="teams"]').classList.add("active");
+    document.getElementById("teams").classList.add("active");
+    updateTabContent('teams');
+  });
 }
 
 // --- INICIO ---
@@ -782,4 +779,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   setLanguage(currentLang); // Aplicar idioma al cargar
   await loadUidNameMap();
   loadDay();
+
 });
