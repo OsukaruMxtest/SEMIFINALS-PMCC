@@ -1,95 +1,95 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PMCC Caster Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <h1>PMCC FALL 2025 — SEMIFINALS DATA</h1>
-    <div class="header-right">
-      <div class="lang-selector">
-        <button id="lang-es" class="lang-btn active">ES</button>
-        <button id="lang-en" class="lang-btn">EN</button>
-      </div>
-      <div class="day-selector">
-        <button class="btn active" data-day="day1">Day 1</button>
-        <button class="btn" data-day="day2">Day 2</button>
-      </div>
-    </div>
-  </header>
+	<!DOCTYPE html>
+	<html lang="es">
+	<head>
+	  <meta charset="UTF-8" />
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	  <title>PMCC Caster Dashboard</title>
+	  <link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+	  <header>
+		<h1>PMCC FALL 2025 — SEMIFINALS DATA</h1>
+		<div class="header-right">
+		  <div class="lang-selector">
+			<button id="lang-es" class="lang-btn active">ES</button>
+			<button id="lang-en" class="lang-btn">EN</button>
+		  </div>
+		  <div class="day-selector">
+			<button class="btn active" data-day="day1">Day 1</button>
+			<button class="btn" data-day="day2">Day 2</button>
+		  </div>
+		</div>
+	  </header>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="teams">Teams</button>
-    <button class="tab" data-tab="players">Players</button>
-    <button class="tab" data-tab="maps">By Map</button>
-    <button class="tab" data-tab="highlights">Highlights</button>
-  </nav>
+	  <nav class="tabs">
+		<button class="tab active" data-tab="teams">Teams</button>
+		<button class="tab" data-tab="players">Players</button>
+		<button class="tab" data-tab="maps">By Map</button>
+		<button class="tab" data-tab="highlights">Highlights</button>
+	  </nav>
 
-  <main class="content">
-    <section id="teams" class="tab-content active">
-      <h2>Team Summary</h2>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Pos</th>
-            <th>Team</th>
-            <th>Eliminations</th>
-            <th>Damage</th>
-            <th>WWWCD</th>
-          </tr>
-        </thead>
-        <tbody id="teams-body">
-        </tbody>
-      </table>
-    </section>
+	  <main class="content">
+		<section id="teams" class="tab-content active">
+		  <h2>Team Summary</h2>
+		  <table class="data-table">
+			<thead>
+			  <tr>
+				<th>Pos</th>
+				<th>Team</th>
+				<th>Eliminations</th>
+				<th>Damage</th>
+				<th>WWWCD</th>
+			  </tr>
+			</thead>
+			<tbody id="teams-body">
+			</tbody>
+		  </table>
+		</section>
 
-    <section id="players" class="tab-content">
-      <h2>Top Players</h2>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Team</th>
-            <th>Eliminations</th>
-            <th>Damage</th>
-            <th>Headshot %</th>
-            <th>Longest Elimination</th>
-          </tr>
-        </thead>
-        <tbody id="players-body">
-        </tbody>
-      </table>
-    </section>
+		<section id="players" class="tab-content">
+		  <h2>Top Players</h2>
+		  <table class="data-table">
+			<thead>
+			  <tr>
+				<th>Player</th>
+				<th>Team</th>
+				<th>Eliminations</th>
+				<th>Damage</th>
+				<th>Headshot %</th>
+				<th>Longest Elimination</th>
+			  </tr>
+			</thead>
+			<tbody id="players-body">
+			</tbody>
+		  </table>
+		</section>
 
-    <section id="maps" class="tab-content">
-      <h2>Stats by Map</h2>
-      <div class="map-filters">
-        <button class="map-btn active" data-map="Erangel">Erangel</button>
-        <button class="map-btn" data-map="Miramar">Miramar</button>
-        <button class="map-btn" data-map="Sanhok">Sanhok</button>
-        <button class="map-btn" data-map="Rondo">Rondo</button>
-      </div>
-      <div id="map-stats">
-        <p>Select a map to view detailed stats.</p>
-      </div>
-    </section>
+		<section id="maps" class="tab-content">
+		  <h2>Stats by Map</h2>
+		  <div class="map-filters">
+			<button class="map-btn active" data-map="Erangel">Erangel</button>
+			<button class="map-btn" data-map="Miramar">Miramar</button>
+			<button class="map-btn" data-map="Sanhok">Sanhok</button>
+			<button class="map-btn" data-map="Rondo">Rondo</button>
+		  </div>
+		  <div id="map-stats">
+			<p>Select a map to view detailed stats.</p>
+		  </div>
+		</section>
 
-    <section id="highlights" class="tab-content">
-      <h2>Day Highlights</h2>
-      <div class="highlights-grid" id="highlights-list">
-      </div>
-    </section>
+		<section id="highlights" class="tab-content">
+		  <h2>Day Highlights</h2>
+		  <div class="highlights-grid" id="highlights-list">
+		  </div>
+		</section>
 
-    <section id="team-detail" class="tab-content">
-      <button id="back-to-teams" class="btn-back">← Back to Teams</button>
-      <h2 id="team-detail-title">Team Details</h2>
-      <div id="team-player-stats"></div>
-    </section>
-  </main>
+		<section id="team-detail" class="tab-content">
+		  <button id="back-to-teams" class="btn-back">← Back to Teams</button>
+		  <h2 id="team-detail-title">Team Details</h2>
+		  <div id="team-player-stats"></div>
+		</section>
+	  </main>
 
-  <script src="script.js"></script>
-</body>
-</html>
+	  <script src="script.js"></script>
+	</body>
+	</html>
