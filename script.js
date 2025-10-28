@@ -404,7 +404,7 @@ function renderAll() {
   renderTeams();
   renderPlayers();
   renderHighlights();
-  setupEventListeners(); // Solo una vez, como en el original
+  setupEventListeners();
 }
 
 function renderTeams() {
@@ -751,7 +751,7 @@ function setupEventListeners() {
     });
   });
 
-  // ✅ Listener DIRECTO en #teams-body — IGUAL QUE EN EL ORIGINAL (funciona 100%)
+  // ✅ Listener DIRECTO en #teams-body
   document.getElementById("teams-body").addEventListener("click", (e) => {
     const row = e.target.closest("tr");
     if (row && row.dataset.teamId) {
