@@ -5,8 +5,8 @@ const DAY1_FILES = [
 ];
 
 const QUALIFIED_TEAMS = new Set([
-  "1-10", "1-7", "1-16", "1-12", "1-17", "1-15", "1-14", "1-6",
-  "2-14", "2-10", "2-9", "2-16", "2-13", "2-8", "2-3", "2-12"
+  "1-10", "1-9", "1-2", "1-3", "1-7", "1-5", "1-8", "1-6",
+  "2-1", "2-2", "2-3", "2-4", "2-5", "2-6", "2-7", "2-9"
 ]);
 
 let globalData = {
@@ -788,3 +788,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUidNameMap();
   loadDay();
 });
+
