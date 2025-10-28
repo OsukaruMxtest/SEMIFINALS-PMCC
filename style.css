@@ -1,3 +1,4 @@
+/* Reset y base */
 * {
   margin: 0;
   padding: 0;
@@ -12,6 +13,7 @@ body {
   font-size: 18px;
 }
 
+/* Encabezado */
 header {
   display: flex;
   justify-content: space-between;
@@ -33,6 +35,7 @@ header h1 {
   gap: 16px;
 }
 
+/* Selector de idioma */
 .lang-selector {
   display: flex;
   gap: 4px;
@@ -54,6 +57,7 @@ header h1 {
   color: white;
 }
 
+/* Selector de día */
 .day-selector .btn {
   background: #2a2a4a;
   color: #d0d0ff;
@@ -70,6 +74,7 @@ header h1 {
   color: white;
 }
 
+/* Pestañas */
 .tabs {
   display: flex;
   gap: 8px;
@@ -92,6 +97,7 @@ header h1 {
   border-bottom: 3px solid #00f0ff;
 }
 
+/* Contenido */
 .content {
   background: #15152a;
   border-radius: 10px;
@@ -124,6 +130,7 @@ h4 {
   font-size: 20px;
 }
 
+/* Botón de regreso */
 .btn-back {
   margin-bottom: 16px;
   padding: 8px 16px;
@@ -140,6 +147,7 @@ h4 {
   background: #5a5a9a;
 }
 
+/* Tablas */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -167,6 +175,7 @@ h4 {
   background: #1f1f3f;
 }
 
+/* Filtros de mapa */
 .map-filters {
   margin-bottom: 20px;
 }
@@ -187,6 +196,7 @@ h4 {
   font-weight: bold;
 }
 
+/* Highlights */
 .highlights-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -213,6 +223,7 @@ h4 {
   font-style: normal;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   body { font-size: 15px; }
   header { flex-direction: column; gap: 12px; }
@@ -229,6 +240,7 @@ h4 {
   h4 { font-size: 18px; }
 }
 
+/* Contenedor para tablas muy anchas */
 #team-player-stats {
   overflow-x: auto;
   padding: 4px 0;
