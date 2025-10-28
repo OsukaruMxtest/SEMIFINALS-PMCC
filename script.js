@@ -1,16 +1,12 @@
-// --- CONFIGURACIÓN ---
 const MAP_NAMES = {1: "Erangel", 2: "Miramar", 3: "Sanhok", 4: "Rondo"};
 const DAY1_FILES = [
   "data/day1/M1.csv", "data/day1/M2.csv", "data/day1/M3.csv", "data/day1/M4.csv",
   "data/day1/M5.csv", "data/day1/M6.csv", "data/day1/M7.csv", "data/day1/M8.csv"
 ];
 
-// 🔑 EQUIPOS CLASIFICADOS A LA FINAL — ACTUALIZADOS
 const QUALIFIED_TEAMS = new Set([
-  // Lobby 1
-  "1-10", "1-9", "1-2", "1-3", "1-7", "1-5", "1-8", "1-6",
-  // Lobby 2
-  "2-1", "2-2", "2-3", "2-4", "2-5", "2-6", "2-7", "2-9"
+  "1-16", "1-10", "1-9", "1-17", "1-6", "1-4", "1-14", "1-3",
+  "2-4", "2-11", "2-9", "2-14", "2-16", "2-13", "2-8", "2-7"
 ]);
 
 let globalData = {
@@ -22,8 +18,8 @@ let globalData = {
 
 let uidToName = {};
 let currentLang = localStorage.getItem('lang') || 'es';
+let currentTeamId = null; 
 
-// --- TRADUCCIONES ---
 const translations = {
   es: {
     title: "PMCC FALL 2025 — DATOS SEMIFINALES",
@@ -47,7 +43,7 @@ const translations = {
     selectMap: "Selecciona un mapa para ver estadísticas detalladas.",
     dayHighlights: "Highlights del Día",
     backToTeams: "← Volver a Equipos",
-    teamDetails: "Estadísticas: {name} (L{lobby})",
+    teamDetails: "Detalles del Equipo",
     mvt: "MVT",
     mvp: "MVP",
     longestKill: "Baja más lejana",
@@ -72,7 +68,10 @@ const translations = {
     grenades: "Granadas",
     driven: "Dist. Conducida",
     walked: "Dist. Recorrida",
-    revives: "Rescates"
+    revives: "Rescates",
+    topTeamsInMap: map => `Top Equipos en ${map}`,
+    topPlayersInMap: map => `Top Jugadores en ${map}`,
+    noMatchesForTeam: "No se encontraron partidas para este equipo."
   },
   en: {
     title: "PMCC FALL 2025 — SEMIFINALS DATA",
@@ -96,7 +95,7 @@ const translations = {
     selectMap: "Select a map to view detailed stats.",
     dayHighlights: "Day Highlights",
     backToTeams: "← Back to Teams",
-    teamDetails: "Stats: {name} (L{lobby})",
+    teamDetails: "Team Details",
     mvt: "MVT",
     mvp: "MVP",
     longestKill: "Longest Kill",
@@ -121,7 +120,10 @@ const translations = {
     grenades: "Grenades",
     driven: "Driven",
     walked: "Walked",
-    revives: "Revives"
+    revives: "Revives",
+    topTeamsInMap: map => `Top Teams in ${map}`,
+    topPlayersInMap: map => `Top Players in ${map}`,
+    noMatchesForTeam: "No matches found for this team."
   }
 };
 
@@ -129,10 +131,6 @@ function t(key, ...args) {
   let str = translations[currentLang][key] || key;
   if (typeof str === 'function') str = str(...args);
   return str;
-}
-
-function formatTeamTitle(template, name, lobby) {
-  return template.replace('{name}', name).replace('{lobby}', lobby);
 }
 
 function setLanguage(lang) {
@@ -151,8 +149,16 @@ function setLanguage(lang) {
 
   document.getElementById('back-to-teams').textContent = t('backToTeams');
 
-  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
-  if (activeTab) updateTabContent(activeTab);
+  const isTeamDetailActive = document.getElementById("team-detail").classList.contains("active");
+  
+  if (isTeamDetailActive && currentTeamId) {
+    renderTeamDetail(currentTeamId);
+  } else {
+    renderAll();
+    
+    const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+    if (activeTab) updateTabContent(activeTab);
+  }
 
   document.getElementById('lang-es').classList.toggle('active', lang === 'es');
   document.getElementById('lang-en').classList.toggle('active', lang === 'en');
@@ -190,7 +196,6 @@ function updateTabContent(tabId) {
   }
 }
 
-// --- UTILIDADES ---
 function parseTime(timeStr) {
   if (!timeStr || timeStr === "0m 0s" || timeStr === "") return 0;
   const clean = timeStr.replace(/\s+/g, " ").trim();
@@ -215,7 +220,6 @@ function getLobbyAndMap(filename) {
   return { lobby, map: MAP_NAMES[mapNum] || `Map ${mapNum}` };
 }
 
-// --- CARGA DEL MAPEO UID → NOMBRE CLARO ---
 async function loadUidNameMap() {
   try {
     const response = await fetch("uid-name.csv");
@@ -269,7 +273,6 @@ async function loadUidNameMap() {
   }
 }
 
-// --- CARGA PRINCIPAL ---
 async function loadDay() {
   const Papa = window.Papa;
   globalData = { matches: [], teams: {}, players: {}, allMaps: new Set() };
@@ -396,15 +399,18 @@ async function loadDay() {
   }
 
   renderAll();
-  renderMapSection("Erangel");
 }
 
-// --- RENDERIZADO ---
 function renderAll() {
   renderTeams();
   renderPlayers();
   renderHighlights();
   setupEventListeners();
+  
+  const activeMapBtn = document.querySelector('.map-btn.active');
+  if (activeMapBtn) {
+    renderMapSection(activeMapBtn.dataset.map);
+  }
 }
 
 function renderTeams() {
@@ -542,7 +548,7 @@ function renderMapSection(mapFilter) {
 
   const matches = globalData.matches.filter(m => m.map === mapFilter);
   if (matches.length === 0) {
-    container.innerHTML = `<p>${t('noMapData')(mapFilter)}</p>`;
+    container.innerHTML = `<p>${t('noMapData', mapFilter)}</p>`;
     return;
   }
 
@@ -568,7 +574,7 @@ function renderMapSection(mapFilter) {
   }
 
   const teamsArray = Object.values(mapTeams).sort((a, b) => b.kills - a.kills).slice(0, 10);
-  let html = `<h3>Top Teams in ${mapFilter}</h3><table class="data-table"><thead><tr><th>Team</th><th>Kills</th><th>Damage</th></tr></thead><tbody>`;
+  let html = `<h3>${t('topTeamsInMap', mapFilter)}</h3><table class="data-table"><thead><tr><th>${t('team')}</th><th>${t('eliminations')}</th><th>${t('damage')}</th></tr></thead><tbody>`;
   teamsArray.forEach(t => {
     html += `<tr><td>${t.name} <small>(L${t.lobby})</small></td><td>${t.kills}</td><td>${t.damage}</td></tr>`;
   });
@@ -595,7 +601,7 @@ function renderMapSection(mapFilter) {
   }
 
   const topPlayers = Object.values(playerMapStats).sort((a, b) => b.kills - a.kills).slice(0, 10);
-  html += `<h3>Top Players in ${mapFilter}</h3><table class="data-table"><thead><tr><th>Player</th><th>Team</th><th>Kills</th><th>Damage</th><th>Max Dist.</th></tr></thead><tbody>`;
+  html += `<h3>${t('topPlayersInMap', mapFilter)}</h3><table class="data-table"><thead><tr><th>${t('player')}</th><th>${t('team')}</th><th>${t('eliminations')}</th><th>${t('damage')}</th><th>${t('longestElim')}</th></tr></thead><tbody>`;
   topPlayers.forEach(p => {
     html += `<tr><td>${p.name}</td><td>${p.team} <small>(L${p.lobby})</small></td><td>${p.kills}</td><td>${p.damage}</td><td>${p.maxDist}m</td></tr>`;
   });
@@ -605,22 +611,25 @@ function renderMapSection(mapFilter) {
 }
 
 function renderTeamDetail(teamId) {
+  currentTeamId = teamId;
   const team = globalData.teams[teamId];
-  if (!team) return;
+  if (!team) {
+    console.warn("Team not found:", teamId);
+    return;
+  }
 
   document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
   document.getElementById("team-detail").classList.add("active");
 
-  const titleTemplate = t('teamDetails');
-  document.getElementById("team-detail-title").textContent = formatTeamTitle(titleTemplate, team.name, team.lobby);
+  document.getElementById("team-detail-title").textContent = `${t('teamDetails')}: ${team.name} (L${team.lobby})`;
 
   const matchesOfTeam = globalData.matches.filter(match =>
     Object.keys(match.teams).includes(teamId)
   );
 
   if (matchesOfTeam.length === 0) {
-    document.getElementById("team-player-stats").innerHTML = "<p>No matches found for this team.</p>";
+    document.getElementById("team-player-stats").innerHTML = `<p>${t('noMatchesForTeam')}</p>`;
     return;
   }
 
@@ -630,7 +639,7 @@ function renderTeamDetail(teamId) {
     const map = match.map;
     const matchPlayers = match.players.filter(p => `${match.lobby}-${p["TeamID"]}` === teamId);
     
-    html += `<h4>${t('match')(idx + 1)} - ${map}</h4>`;
+    html += `<h4>${t('match', idx + 1)} - ${map}</h4>`;
     html += `<table class="data-table"><thead><tr>
       <th>${t('playerName')}</th>
       <th>${t('kills')}</th>
@@ -660,7 +669,7 @@ function renderTeamDetail(teamId) {
         <td>${p["Número de Headshots"]}</td>
         <td>${p["Daño Recibido"] || 0}</td>
         <td>${p["Curación"] || 0}</td>
-        <td>${p["Tiempo Fuera del Círculo Azul"] || "0m 0s"}</td>
+        <td>${secondsToTime(parseTime(p["Tiempo Fuera del Círculo Azul"]))}</td>
         <td>${p["Bajas con Granada"] || 0}</td>
         <td>${(p["Distancia Conducida"] || 0)}m</td>
         <td>${(p["Distancia Recorrida"] || 0)}m</td>
@@ -727,11 +736,9 @@ function renderTeamDetail(teamId) {
 }
 
 function setupEventListeners() {
-  // --- Idioma ---
   document.getElementById('lang-es').addEventListener('click', () => setLanguage('es'));
   document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
 
-  // --- Pestañas ---
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
@@ -742,7 +749,6 @@ function setupEventListeners() {
     });
   });
 
-  // --- Mapas ---
   document.querySelectorAll(".map-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".map-btn").forEach(b => b.classList.remove("active"));
@@ -751,27 +757,23 @@ function setupEventListeners() {
     });
   });
 
-  // ✅ Listener DIRECTO en #teams-body
   document.getElementById("teams-body").addEventListener("click", (e) => {
-    const row = e.target.closest("tr");
+    const row = e.target.closest("tr[data-team-id]");
     if (row && row.dataset.teamId) {
       renderTeamDetail(row.dataset.teamId);
     }
   });
 
-  // --- Botón de regreso ---
-  const backBtn = document.getElementById("back-to-teams");
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      document.querySelector('.tab[data-tab="teams"]').classList.add("active");
-      document.getElementById("teams").classList.add("active");
-    });
-  }
+  document.getElementById("back-to-teams").addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector('.tab[data-tab="teams"]').classList.add("active");
+    document.getElementById("teams").classList.add("active");
+    updateTabContent('teams');
+    currentTeamId = null;
+  });
 }
 
-// --- INICIO ---
 document.addEventListener("DOMContentLoaded", async () => {
   if (typeof Papa === "undefined") {
     const script = document.createElement("script");
