@@ -197,7 +197,7 @@ h4 {
   background: #1e1e3a;
   padding: 16px;
   border-radius: 8px;
-  text-align: center;
+  text-align: left;
   border-left: 4px solid #00f0ff;
 }
 
@@ -211,6 +211,21 @@ h4 {
 .highlight-card em {
   color: #b0b0ff;
   font-style: normal;
+}
+
+.players-tables-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.players-table-wrapper {
+  flex: 1;
+  min-width: 300px;
+}
+
+.players-table-wrapper .data-table {
+  margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
@@ -227,6 +242,9 @@ h4 {
   h2 { font-size: 22px; }
   h3 { font-size: 20px; }
   h4 { font-size: 18px; }
+  .players-tables-container {
+    flex-direction: column;
+  }
 }
 
 #team-player-stats {
