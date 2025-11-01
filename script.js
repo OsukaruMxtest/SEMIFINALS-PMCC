@@ -55,19 +55,19 @@ const TEAM_NAMES = {
   finales: {
     3: "ITSV",
     4: "Southeastern Louisiana",
-    5: "Middlesex County",
+    5: "Middlesex County (A)",
     6: "Seneca (B)",
     7: "Seneca (A)",
     8: "Portage",
-    9: "Alabama",
+    9: "Alabama (A)",
     10: "Coquitlam",
     11: "Canada West",
     12: "Kent State",
     13: "Arkansas State",
-    14: "Middlesex County",
+    14: "Middlesex County (B)",
     15: "Red River",
     16: "Algoma",
-    17: "Seneca (C)",
+    17: "Alabama (B)",
     18: "Vancouver CC"
   }
 };
@@ -1049,4 +1049,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUidNameMap();
   loadDay(selectedDay); 
 });
+
 
