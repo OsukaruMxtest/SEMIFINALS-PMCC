@@ -1,3 +1,4 @@
+// --- CONFIGURACIÓN ---
 const MAP_NAMES = {1: "Erangel", 2: "Miramar", 3: "Sanhok", 4: "Rondo"};
 
 const DAY_FILES = {
@@ -11,27 +12,88 @@ const DAY_FILES = {
   ]
 };
 
-
 const QUALIFIED_TEAM_IDS = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
 
-const TEAM_ID_NAME_OVERRIDE = {
-  3: "ITSV",
-  4: "Southeastern Louisiana",
-  5: "Middlesex County",
-  6: "Seneca (B)",
-  7: "Seneca (A)",
-  8: "Portage",
-  9: "Alabama",
-  10: "Coquitlam",
-  11: "Canada West",
-  12: "Kent State",
-  13: "Arkansas State",
-  14: "Middlesex County",
-  15: "Red River",
-  16: "Algoma",
-  17: "Seneca (C)",
-  18: "Vancouver CC"
+// NUEVO: Nombres de equipos por fase y lobby
+const TEAM_NAMES = {
+  semifinales: {
+    lobby1: {
+      10: "SOUTHEASTERN LOUISIANA",
+      7: "ALGOMA",
+      16: "ITSV",
+      4: "PORTAGE",
+      3: "COQUITLAM",
+      18: "UNAM",
+      12: "ST. CLAIR",
+      17: "SENECA (B)",
+      15: "CINCINNATI",
+      13: "CONESTOGA",
+      9: "MIDDLESEX COUNTY",
+      5: "BAUP (A)",
+      8: "BAUP (B)",
+      14: "ALABAMA",
+      6: "SENECA (A)",
+      11: "CANADA WEST"
+    },
+    lobby2: {
+      10: "NIAGARA",
+      15: "ALABAMA",
+      14: "MIDDLESEX COUNTY",
+      9: "ARKANSAS STATE",
+      16: "RED RIVER",
+      8: "VICTORIA",
+      3: "SENECA",
+      6: "ST. CLAIR",
+      5: "OLD COLLEGE A&T",
+      12: "ST. CLAIR",
+      13: "ALGOMA",
+      17: "NORTHERN ARIZONA",
+      11: "KENT STATE",
+      18: "ELMHURST",
+      7: "VANCOUVER CC",
+      4: "CANADA WEST"
+    }
+  },
+  finales: {
+    // En finales, los teamID son 1–16 (o los que apliquen), y deben coincidir con los equipos clasificados.
+    // Asumimos que los nombres finales se asignan según el equipo real, no el ID de semifinales.
+    // Por ahora, usamos los mismos nombres que en semifinales para los equipos que clasificaron.
+    // Puedes ajustar estos valores según los datos reales de finales.
+    1: "ITSV",
+    2: "Southeastern Louisiana",
+    3: "Middlesex County",
+    4: "Seneca (B)",
+    5: "Seneca (A)",
+    6: "Portage",
+    7: "Alabama",
+    8: "Coquitlam",
+    9: "Canada West",
+    10: "Kent State",
+    11: "Arkansas State",
+    12: "Middlesex County",
+    13: "Red River",
+    14: "Algoma",
+    15: "Seneca (C)",
+    16: "Vancouver CC"
+    // Nota: Si en finales los teamID no coinciden con los de semifinales, asegúrate de mapearlos correctamente aquí.
+  }
 };
+
+// NUEVA FUNCIÓN: obtiene el nombre del equipo según fase, lobby y teamId
+function getTeamName(fase, lobby, teamId) {
+  const id = Number(teamId);
+  if (fase === 'semifinales') {
+    const lobbyKey = `lobby${lobby}`;
+    if (TEAM_NAMES.semifinales[lobbyKey] && TEAM_NAMES.semifinales[lobbyKey][id] !== undefined) {
+      return TEAM_NAMES.semifinales[lobbyKey][id];
+    }
+  } else if (fase === 'finales') {
+    if (TEAM_NAMES.finales[id] !== undefined) {
+      return TEAM_NAMES.finales[id];
+    }
+  }
+  return `Team ${id}`;
+}
 
 const POSITION_POINTS = {
   1: 10,
@@ -55,31 +117,32 @@ let currentLang = localStorage.getItem('lang') || 'es';
 let selectedDay = 'day1'; 
 let currentTeamDetailId = null; 
 
+// --- TRADUCCIONES ---
 const translations = {
   es: {
-    title: "PMCC FALL 2025 — DATOS",
+    title: "PMCC FALL 2025 — SEMIFINALES / FINALES",
     day1: "Semifinales",
     day2: "Finales",
-    teams: "Equipos",
-    players: "Jugadores",
-    maps: "Por Mapa",
+    teams: "Teams",
+    players: "Players",
+    maps: "By Map",
     highlights: "Highlights",
-    teamSummary: "Resumen por Equipos",
+    teamSummary: "Team Summary",
     pos: "Pos",
-    team: "Equipo",
-    eliminations: "Eliminaciones",
-    damage: "Daño",
+    team: "Team",
+    eliminations: "Elim",
+    damage: "Damage",
     wwwcd: "WWWCD",
-    positionPoints: "Ptos. por posición",
+    positionPoints: "PP",
     total: "Total",
-    topPlayers: "Jugadores Destacados",
-    player: "Jugador",
+    topPlayers: "Players",
+    player: "Player",
     headshotPct: "Headshot %",
-    longestElim: "Elim. a mayor distancia",
-    statsByMap: "Estadísticas por Mapa",
-    selectMap: "Selecciona un mapa para ver estadísticas detalladas.",
-    dayHighlights: "Highlights del Día",
-    backToTeams: "← Volver a Equipos",
+    longestElim: "Longest Elim",
+    statsByMap: "Stats by Map (Finales acumuladas M1+M5, M2+M6...)",
+    selectMap: "Select a map to view detailed stats.",
+    dayHighlights: "Highlights por Mapa (Finales)",
+    backToTeams: "← Back to Teams",
     teamDetails: "Detalles del Equipo",
     mvt: "MVT",
     mvp: "MVP",
@@ -127,7 +190,7 @@ const translations = {
     playerStats: "Estadísticas de Jugadores"
   },
   en: {
-    title: "PMCC FALL 2025 — DATA",
+    title: "PMCC FALL 2025 — SEMIFINALS / FINALS",
     day1: "Semifinals",
     day2: "Finals",
     teams: "Teams",
@@ -137,18 +200,18 @@ const translations = {
     teamSummary: "Team Summary",
     pos: "Pos",
     team: "Team",
-    eliminations: "Eliminations",
+    eliminations: "Elim",
     damage: "Damage",
     wwwcd: "WWWCD",
-    positionPoints: "Position Points",
+    positionPoints: "PP",
     total: "Total",
-    topPlayers: "Top Players",
+    topPlayers: "Players",
     player: "Player",
     headshotPct: "Headshot %",
     longestElim: "Longest Elimination",
-    statsByMap: "Stats by Map",
+    statsByMap: "Stats by Map (Finals accumulated M1+M5, M2+M6...)",
     selectMap: "Select a map to view detailed stats.",
-    dayHighlights: "Day Highlights",
+    dayHighlights: "Highlights by Map (Finals)",
     backToTeams: "← Back to Teams",
     teamDetails: "Team Details",
     mvt: "MVT",
@@ -204,6 +267,75 @@ function t(key, ...args) {
   return str;
 }
 
+function setLanguage(lang) {
+  if (!['es', 'en'].includes(lang)) return;
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+
+  document.querySelector('h1').textContent = t('title');
+  document.querySelector('.day-selector .btn[data-day="day1"]').textContent = t('day1');
+  document.querySelector('.day-selector .btn[data-day="day2"]').textContent = t('day2');
+
+  document.querySelector('.tab[data-tab="teams"]').textContent = t('teams');
+  document.querySelector('.tab[data-tab="players"]').textContent = t('players');
+  document.querySelector('.tab[data-tab="maps"]').textContent = t('maps');
+  document.querySelector('.tab[data-tab="highlights"]').textContent = t('highlights');
+
+  document.getElementById('back-to-teams').textContent = t('backToTeams');
+
+  // Actualizar captions de tablas de players
+  const accCaption = document.querySelector('#players-acc-table caption');
+  const finalsCaption = document.querySelector('#players-finals-table caption');
+  if (accCaption) {
+    accCaption.textContent = selectedDay === 'day1' ? t('playersSemifinals') : t('playersAccumulated');
+  }
+  if (finalsCaption) {
+    finalsCaption.textContent = t('playersFinals');
+  }
+
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+  if (activeTab) updateTabContent(activeTab);
+
+  document.getElementById('lang-es').classList.toggle('active', lang === 'es');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+}
+
+function updateTabContent(tabId) {
+  switch (tabId) {
+    case 'teams':
+      document.querySelector('#teams h2').textContent = t('teamSummary');
+      const teamHeaders = document.querySelectorAll('#teams thead th');
+      teamHeaders[0].textContent = t('pos');
+      teamHeaders[1].textContent = t('team');
+      teamHeaders[2].textContent = t('eliminations');
+      teamHeaders[3].textContent = t('positionPoints');
+      teamHeaders[4].textContent = t('total');
+      teamHeaders[5].textContent = t('wwwcd');
+      renderTeams();
+      break;
+    case 'players':
+      document.querySelector('#players h2').textContent = t('topPlayers');
+      const playerHeaders = document.querySelectorAll('#players-acc-table thead th, #players-finals-table thead th');
+      playerHeaders[0].textContent = t('player');
+      playerHeaders[1].textContent = t('team');
+      playerHeaders[2].textContent = t('eliminations');
+      playerHeaders[3].textContent = t('damage');
+      playerHeaders[4].textContent = t('headshotPct');
+      playerHeaders[5].textContent = t('longestElim');
+      renderPlayers();
+      break;
+    case 'maps':
+      document.querySelector('#maps h2').textContent = selectedDay === 'day1' ? t('statsByMapDay1') : t('statsByMapDay2');
+      document.getElementById('map-stats').innerHTML = `<p>${t('selectMap')}</p>`;
+      break;
+    case 'highlights':
+      document.querySelector('#highlights h2').textContent = selectedDay === 'day1' ? t('highlightsDay1') : t('highlightsDay2');
+      renderHighlights();
+      break;
+  }
+}
+
+// --- UTILIDADES ---
 function parseTime(timeStr) {
   if (!timeStr || timeStr === "0m 0s" || timeStr === "") return 0;
   const clean = timeStr.replace(/\s+/g, " ").trim();
@@ -212,11 +344,13 @@ function parseTime(timeStr) {
   const secs = parts[1] ? parseInt(parts[1].replace(/\D/g, "")) || 0 : 0;
   return mins * 60 + secs;
 }
+
 function secondsToTime(secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}m ${s}s`;
 }
+
 function getLobbyAndMapInfo(filename) {
   const match = filename.match(/M(\d)/i);
   if (!match) return { lobby: 1, map: "Unknown", matchNum: 0 };
@@ -225,15 +359,23 @@ function getLobbyAndMapInfo(filename) {
   const mapNum = num <= 4 ? num : num - 4;
   return { lobby, map: MAP_NAMES[mapNum] || `Map ${mapNum}`, matchNum: num };
 }
+
 function isQualifiedTeamId(teamId) {
   return QUALIFIED_TEAM_IDS.includes(Number(teamId));
 }
-function compId(lobby, teamId) { return `${lobby}-${teamId}`; }
 
+function compId(lobby, teamId) { 
+  return `${lobby}-${teamId}`; 
+}
+
+// --- CARGA DEL MAPEO UID → NOMBRE CLARO ---
 async function loadUidNameMap() {
   try {
     const response = await fetch("uid-name.csv");
-    if (!response.ok) { console.warn("uid-name.csv not found"); return; }
+    if (!response.ok) { 
+      console.warn("uid-name.csv not found"); 
+      return; 
+    }
     const csvText = await response.text();
     const Papa = window.Papa;
     const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
@@ -250,11 +392,13 @@ async function loadUidNameMap() {
   }
 }
 
+// --- CARGA PRINCIPAL ---
 async function loadDay(day = 'day1') {
   selectedDay = day;
   globalData = { matches: [], teams: {}, players: {} };
   const Papa = window.Papa;
   const files = DAY_FILES[day] || [];
+  
   for (const file of files) {
     try {
       const response = await fetch(file);
@@ -264,7 +408,10 @@ async function loadDay(day = 'day1') {
       }
       const csvText = await response.text();
       const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-      if (!result.data?.length) { console.warn("Empty file:", file); continue; }
+      if (!result.data?.length) { 
+        console.warn("Empty file:", file); 
+        continue; 
+      }
 
       const { lobby, map, matchNum } = getLobbyAndMapInfo(file);
       const match = { day, matchNum, lobby, map, teams: {}, players: [], rows: result.data };
@@ -284,9 +431,10 @@ async function loadDay(day = 'day1') {
         const compTeamId = compId(match.lobby, teamIdRaw);
         const uidFromMatch = (row["uId"] || "").toString().trim();
         const compPlayerId = compId(match.lobby, uidFromMatch);
-        const teamNameFromCSV = row["Nombre del Equipo"] || "";
-        const overrideName = TEAM_ID_NAME_OVERRIDE[Number(teamIdRaw)];
-        const teamName = overrideName || teamNameFromCSV || `Team ${teamIdRaw}`;
+        
+        // NUEVO: obtener nombre según fase y lobby
+        const fase = day === 'day1' ? 'semifinales' : 'finales';
+        const teamName = getTeamName(fase, match.lobby, teamIdRaw);
 
         if (!match.teams[compTeamId]) {
           match.teams[compTeamId] = {
@@ -341,10 +489,6 @@ async function loadDay(day = 'day1') {
 
         match.players.push(row);
       }
-
-      aggregateTeams();
-      renderAll(); 
-
     } catch (err) {
       console.error("Error processing file:", file, err);
     }
@@ -498,10 +642,12 @@ function renderPlayers() {
         const compPid = compId(lid, uid);
         const teamIdNum = Number(row["TeamID"]);
         if (!isQualifiedTeamId(teamIdNum)) continue;
+        // NUEVO: obtener nombre en finales
+        const teamName = getTeamName('finales', lid, teamIdNum);
         if (!finalsPlayersAgg[compPid]) {
           finalsPlayersAgg[compPid] = {
             name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown",
-            team: TEAM_ID_NAME_OVERRIDE[teamIdNum] || row["Nombre del Equipo"] || `Team ${teamIdNum}`,
+            team: teamName,
             lobby: lid,
             kills: 0,
             damage: 0,
@@ -562,7 +708,9 @@ function renderHighlights() {
       const compPid = compId(match.lobby, uid);
       const teamIdNum = Number(row["TeamID"]);
       if (!isQualifiedTeamId(teamIdNum)) continue;
-      mapBuckets[mapKey].players.push({...row, lobby: match.lobby});
+      // NUEVO: nombre en highlights
+      const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, teamIdNum);
+      mapBuckets[mapKey].players.push({...row, lobby: match.lobby, teamNameOverride: teamName});
     }
   }
 
@@ -575,7 +723,8 @@ function renderHighlights() {
       const uid = (p["uId"] || "").toString().trim();
       const key = `${p.lobby}-${uid}`;
       const name = uidToName[uid] || p["Nombre del Jugador"] || "Unknown";
-      if (!playersAgg[key]) playersAgg[key] = { name, team: TEAM_ID_NAME_OVERRIDE[Number(p["TeamID"])] || p["Nombre del Equipo"], kills:0, damage:0, headshots:0, grenadeKills:0, assists:0, knocks:0, maxDistance:0 };
+      const teamName = p.teamNameOverride || TEAM_NAMES.finales?.[Number(p["TeamID"])] || p["Nombre del Equipo"] || `Team ${p["TeamID"]}`;
+      if (!playersAgg[key]) playersAgg[key] = { name, team: teamName, kills:0, damage:0, headshots:0, grenadeKills:0, assists:0, knocks:0, maxDistance:0 };
       playersAgg[key].kills += p["Número de Bajas"] || 0;
       playersAgg[key].damage += p["Daño"] || 0;
       playersAgg[key].headshots += p["Número de Headshots"] || 0;
@@ -629,7 +778,8 @@ function renderHighlights() {
       const uid = (row["uId"] || "").toString().trim();
       const key = `${match.lobby}-${uid}`;
       if (!isQualifiedTeamId(Number(row["TeamID"]))) continue;
-      if (!aggPlayers[key]) aggPlayers[key] = { name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown", team: TEAM_ID_NAME_OVERRIDE[Number(row["TeamID"])] || row["Nombre del Equipo"], kills:0, damage:0, headshots:0 };
+      const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, row["TeamID"]);
+      if (!aggPlayers[key]) aggPlayers[key] = { name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown", team: teamName, kills:0, damage:0, headshots:0 };
       aggPlayers[key].kills += row["Número de Bajas"] || 0;
       aggPlayers[key].damage += row["Daño"] || 0;
       aggPlayers[key].headshots += row["Número de Headshots"] || 0;
@@ -686,7 +836,8 @@ function renderMapSection(mapFilter) {
       const key = `${match.lobby}-${uid}`;
       const teamNum = Number(row["TeamID"]);
       if (!isQualifiedTeamId(teamNum)) continue;
-      if (!mapPlayers[key]) mapPlayers[key] = { name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown", team: TEAM_ID_NAME_OVERRIDE[teamNum] || row["Nombre del Equipo"], lobby: match.lobby, kills:0, damage:0, maxDist:0 };
+      const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, teamNum);
+      if (!mapPlayers[key]) mapPlayers[key] = { name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown", team: teamName, lobby: match.lobby, kills:0, damage:0, maxDist:0 };
       mapPlayers[key].kills += row["Número de Bajas"] || 0;
       mapPlayers[key].damage += row["Daño"] || 0;
       mapPlayers[key].maxDist = Math.max(mapPlayers[key].maxDist, row["Máxima Distancia de Baja"] || 0);
@@ -711,7 +862,10 @@ function renderMapSection(mapFilter) {
 
 function renderTeamDetail(teamId) {
   const team = globalData.teams[teamId];
-  if (!team) { console.warn("Team not found:", teamId); return; }
+  if (!team) { 
+    console.warn("Team not found:", teamId); 
+    return; 
+  }
 
   currentTeamDetailId = teamId;
 
@@ -831,20 +985,18 @@ function setupEventListeners() {
   document.getElementById('lang-en')?.addEventListener('click', () => setLanguage('en'));
 
   document.querySelectorAll(".tab").forEach(btn => {
-    btn.removeEventListener('click', tabClickHandler);
     btn.addEventListener("click", tabClickHandler);
   });
 
   document.querySelectorAll(".day-selector .btn").forEach(btn => {
-    btn.removeEventListener('click', dayClickHandler);
     btn.addEventListener('click', dayClickHandler);
   });
 
   document.querySelectorAll(".map-btn").forEach(btn => {
-    btn.removeEventListener('click', mapBtnHandler);
     btn.addEventListener('click', mapBtnHandler);
   });
 
+  // Event listener para las filas de equipos
   document.getElementById("teams-body")?.addEventListener("click", (e) => {
     const row = e.target.closest("tr[data-team-id]");
     if (row && row.dataset.teamId) {
@@ -894,47 +1046,15 @@ function mapBtnHandler(evt) {
   renderMapSection(btn.dataset.map);
 }
 
-function setLanguage(lang) {
-  if (!['es','en'].includes(lang)) return;
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  
-  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(`lang-${lang}`).classList.add('active');
-  
-  document.querySelector('h1').textContent = t('title');
-  document.querySelectorAll('.day-selector .btn')[0].textContent = t('day1');
-  document.querySelectorAll('.day-selector .btn')[1].textContent = t('day2');
-  document.querySelector('.tab[data-tab="teams"]').textContent = t('teams');
-  document.querySelector('.tab[data-tab="players"]').textContent = t('players');
-  document.querySelector('.tab[data-tab="maps"]').textContent = t('maps');
-  document.querySelector('.tab[data-tab="highlights"]').textContent = t('highlights');
-  document.querySelector('#teams h2').textContent = t('teamSummary');
-  document.querySelector('#back-to-teams').textContent = t('backToTeams');
-  
-  updateSectionTitles();
-  
-  const accCaption = document.querySelector('#players-acc-table caption');
-  const finalsCaption = document.querySelector('#players-finals-table caption');
-  if (accCaption) {
-    accCaption.textContent = selectedDay === 'day1' ? t('playersSemifinals') : t('playersAccumulated');
-  }
-  if (finalsCaption) {
-    finalsCaption.textContent = t('playersFinals');
-  }
-  
-  if (currentTeamDetailId && document.getElementById("team-detail").classList.contains("active")) {
-    renderTeamDetail(currentTeamDetailId);
-  }
-  
-  renderAll();
-}
-
+// --- INICIO ---
 document.addEventListener("DOMContentLoaded", async () => {
   if (typeof Papa === "undefined") {
     const script = document.createElement("script");
     script.src = "https://unpkg.com/papaparse@5.4.1/papaparse.min.js";
-    await new Promise(resolve => { script.onload = resolve; document.head.appendChild(script); });
+    await new Promise(resolve => { 
+      script.onload = resolve; 
+      document.head.appendChild(script); 
+    });
   }
   setLanguage(currentLang);
   await loadUidNameMap();
