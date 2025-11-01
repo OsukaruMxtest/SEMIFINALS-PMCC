@@ -1,4 +1,3 @@
-// --- CONFIGURACIÓN ---
 const MAP_NAMES = {1: "Erangel", 2: "Miramar", 3: "Sanhok", 4: "Rondo"};
 
 const DAY_FILES = {
@@ -14,7 +13,6 @@ const DAY_FILES = {
 
 const QUALIFIED_TEAM_IDS = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
 
-// NUEVO: Nombres de equipos por fase y lobby
 const TEAM_NAMES = {
   semifinales: {
     lobby1: {
@@ -55,10 +53,6 @@ const TEAM_NAMES = {
     }
   },
   finales: {
-    // En finales, los teamID son 1–16 (o los que apliquen), y deben coincidir con los equipos clasificados.
-    // Asumimos que los nombres finales se asignan según el equipo real, no el ID de semifinales.
-    // Por ahora, usamos los mismos nombres que en semifinales para los equipos que clasificaron.
-    // Puedes ajustar estos valores según los datos reales de finales.
     1: "ITSV",
     2: "Southeastern Louisiana",
     3: "Middlesex County",
@@ -75,11 +69,9 @@ const TEAM_NAMES = {
     14: "Algoma",
     15: "Seneca (C)",
     16: "Vancouver CC"
-    // Nota: Si en finales los teamID no coinciden con los de semifinales, asegúrate de mapearlos correctamente aquí.
   }
 };
 
-// NUEVA FUNCIÓN: obtiene el nombre del equipo según fase, lobby y teamId
 function getTeamName(fase, lobby, teamId) {
   const id = Number(teamId);
   if (fase === 'semifinales') {
@@ -117,32 +109,31 @@ let currentLang = localStorage.getItem('lang') || 'es';
 let selectedDay = 'day1'; 
 let currentTeamDetailId = null; 
 
-// --- TRADUCCIONES ---
 const translations = {
   es: {
     title: "PMCC FALL 2025 — SEMIFINALES / FINALES",
     day1: "Semifinales",
     day2: "Finales",
-    teams: "Teams",
-    players: "Players",
-    maps: "By Map",
-    highlights: "Highlights",
-    teamSummary: "Team Summary",
+    teams: "Equipos",
+    players: "Jugadores",
+    maps: "Por Mapa",
+    highlights: "Destacados",
+    teamSummary: "Resumen de Equipos",
     pos: "Pos",
-    team: "Team",
+    team: "Equipo",
     eliminations: "Elim",
-    damage: "Damage",
+    damage: "Daño",
     wwwcd: "WWWCD",
     positionPoints: "PP",
     total: "Total",
-    topPlayers: "Players",
-    player: "Player",
+    topPlayers: "Jugadores",
+    player: "Jugador",
     headshotPct: "Headshot %",
-    longestElim: "Longest Elim",
-    statsByMap: "Stats by Map (Finales acumuladas M1+M5, M2+M6...)",
-    selectMap: "Select a map to view detailed stats.",
-    dayHighlights: "Highlights por Mapa (Finales)",
-    backToTeams: "← Back to Teams",
+    longestElim: "Elim. más lejana",
+    statsByMap: "Estadísticas por Mapa (Finales acumuladas M1+M5, M2+M6...)",
+    selectMap: "Selecciona un mapa para ver estadísticas detalladas.",
+    dayHighlights: "Destacados por Mapa (Finales)",
+    backToTeams: "← Volver a Equipos",
     teamDetails: "Detalles del Equipo",
     mvt: "MVT",
     mvp: "MVP",
@@ -167,8 +158,8 @@ const translations = {
     driven: "Dist. Conducida",
     walked: "Dist. Recorrida",
     revives: "Rescates",
-    topTeamsInMap: map => `Top Equipos en ${map}`,
-    topPlayersInMap: map => `Top Jugadores en ${map}`,
+    topTeamsInMap: map => `Mejores Equipos en ${map}`,
+    topPlayersInMap: map => `Mejores Jugadores en ${map}`,
     noMatchesForTeam: "No se encontraron partidas para este equipo.",
     playersAccumulated: "Acumulado (Semifinales + Finales)",
     playersFinals: "Finales (solo)",
@@ -177,8 +168,8 @@ const translations = {
     finalsOnly: "Solo Finales",
     statsByMapDay1: "Estadísticas por Mapa (Semifinales)",
     statsByMapDay2: "Estadísticas por Mapa (Finales)",
-    highlightsDay1: "Highlights por Mapa (Semifinales)",
-    highlightsDay2: "Highlights por Mapa (Finales)",
+    highlightsDay1: "Destacados por Mapa (Semifinales)",
+    highlightsDay2: "Destacados por Mapa (Finales)",
     teamPlayerStats: "Estadísticas Totales por Jugador",
     totalStats: "Estadísticas Totales",
     matchesPlayed: "Partidas Jugadas",
@@ -217,7 +208,7 @@ const translations = {
     mvt: "MVT",
     mvp: "MVP",
     longestKill: "Longest Kill",
-    grenadeKills: "Grenade kills",
+    grenadeKills: "Grenade Kills",
     assists: "Assists",
     knocks: "Knocks",
     noData: "Not enough data.",
@@ -283,7 +274,6 @@ function setLanguage(lang) {
 
   document.getElementById('back-to-teams').textContent = t('backToTeams');
 
-  // Actualizar captions de tablas de players
   const accCaption = document.querySelector('#players-acc-table caption');
   const finalsCaption = document.querySelector('#players-finals-table caption');
   if (accCaption) {
@@ -298,6 +288,13 @@ function setLanguage(lang) {
 
   document.getElementById('lang-es').classList.toggle('active', lang === 'es');
   document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+
+  if (currentTeamDetailId && document.getElementById("team-detail")?.classList.contains("active")) {
+    const team = globalData.teams[currentTeamDetailId];
+    if (currentTeamDetailId && document.getElementById("team-detail")?.classList.contains("active")) {
+  renderTeamDetail(currentTeamDetailId);
+}
+  }
 }
 
 function updateTabContent(tabId) {
@@ -335,7 +332,6 @@ function updateTabContent(tabId) {
   }
 }
 
-// --- UTILIDADES ---
 function parseTime(timeStr) {
   if (!timeStr || timeStr === "0m 0s" || timeStr === "") return 0;
   const clean = timeStr.replace(/\s+/g, " ").trim();
@@ -368,7 +364,6 @@ function compId(lobby, teamId) {
   return `${lobby}-${teamId}`; 
 }
 
-// --- CARGA DEL MAPEO UID → NOMBRE CLARO ---
 async function loadUidNameMap() {
   try {
     const response = await fetch("uid-name.csv");
@@ -392,7 +387,6 @@ async function loadUidNameMap() {
   }
 }
 
-// --- CARGA PRINCIPAL ---
 async function loadDay(day = 'day1') {
   selectedDay = day;
   globalData = { matches: [], teams: {}, players: {} };
@@ -432,7 +426,6 @@ async function loadDay(day = 'day1') {
         const uidFromMatch = (row["uId"] || "").toString().trim();
         const compPlayerId = compId(match.lobby, uidFromMatch);
         
-        // NUEVO: obtener nombre según fase y lobby
         const fase = day === 'day1' ? 'semifinales' : 'finales';
         const teamName = getTeamName(fase, match.lobby, teamIdRaw);
 
@@ -642,7 +635,6 @@ function renderPlayers() {
         const compPid = compId(lid, uid);
         const teamIdNum = Number(row["TeamID"]);
         if (!isQualifiedTeamId(teamIdNum)) continue;
-        // NUEVO: obtener nombre en finales
         const teamName = getTeamName('finales', lid, teamIdNum);
         if (!finalsPlayersAgg[compPid]) {
           finalsPlayersAgg[compPid] = {
@@ -708,7 +700,6 @@ function renderHighlights() {
       const compPid = compId(match.lobby, uid);
       const teamIdNum = Number(row["TeamID"]);
       if (!isQualifiedTeamId(teamIdNum)) continue;
-      // NUEVO: nombre en highlights
       const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, teamIdNum);
       mapBuckets[mapKey].players.push({...row, lobby: match.lobby, teamNameOverride: teamName});
     }
@@ -723,7 +714,7 @@ function renderHighlights() {
       const uid = (p["uId"] || "").toString().trim();
       const key = `${p.lobby}-${uid}`;
       const name = uidToName[uid] || p["Nombre del Jugador"] || "Unknown";
-      const teamName = p.teamNameOverride || TEAM_NAMES.finales?.[Number(p["TeamID"])] || p["Nombre del Equipo"] || `Team ${p["TeamID"]}`;
+      const teamName = p.teamNameOverride || getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', p.lobby, p["TeamID"]);
       if (!playersAgg[key]) playersAgg[key] = { name, team: teamName, kills:0, damage:0, headshots:0, grenadeKills:0, assists:0, knocks:0, maxDistance:0 };
       playersAgg[key].kills += p["Número de Bajas"] || 0;
       playersAgg[key].damage += p["Daño"] || 0;
@@ -996,7 +987,6 @@ function setupEventListeners() {
     btn.addEventListener('click', mapBtnHandler);
   });
 
-  // Event listener para las filas de equipos
   document.getElementById("teams-body")?.addEventListener("click", (e) => {
     const row = e.target.closest("tr[data-team-id]");
     if (row && row.dataset.teamId) {
@@ -1046,7 +1036,6 @@ function mapBtnHandler(evt) {
   renderMapSection(btn.dataset.map);
 }
 
-// --- INICIO ---
 document.addEventListener("DOMContentLoaded", async () => {
   if (typeof Papa === "undefined") {
     const script = document.createElement("script");
