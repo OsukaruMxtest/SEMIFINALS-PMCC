@@ -29,7 +29,7 @@ const TEAM_ID_NAME_OVERRIDE = {
   14: "Middlesex County",
   15: "Red River",
   16: "Algoma",
-  17: "Victoria",
+  17: "Seneca (C)",
   18: "Vancouver CC"
 };
 
@@ -940,3 +940,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUidNameMap();
   loadDay(selectedDay); 
 });
+
