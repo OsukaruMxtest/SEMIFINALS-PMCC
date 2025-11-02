@@ -1,5 +1,5 @@
+// --- CONFIGURACIÓN ---
 const MAP_NAMES = {1: "Erangel", 2: "Miramar", 3: "Sanhok", 4: "Rondo"};
-
 const DAY_FILES = {
   day1: [ 
     "data/day1/M1.csv","data/day1/M2.csv","data/day1/M3.csv","data/day1/M4.csv",
@@ -10,9 +10,8 @@ const DAY_FILES = {
     "data/day2/M5.csv","data/day2/M6.csv","data/day2/M7.csv","data/day2/M8.csv"
   ]
 };
-
 const QUALIFIED_TEAM_IDS = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
-
+// NUEVO: Nombres de equipos por fase y lobby
 const TEAM_NAMES = {
   semifinales: {
     lobby1: {
@@ -71,7 +70,7 @@ const TEAM_NAMES = {
     18: "Vancouver CC"
   }
 };
-
+// NUEVA FUNCIÓN: obtiene el nombre del equipo según fase, lobby y teamId
 function getTeamName(fase, lobby, teamId) {
   const id = Number(teamId);
   if (fase === 'semifinales') {
@@ -86,7 +85,6 @@ function getTeamName(fase, lobby, teamId) {
   }
   return `Team ${id}`;
 }
-
 const POSITION_POINTS = {
   1: 10,
   2: 6,
@@ -98,7 +96,6 @@ const POSITION_POINTS = {
   8: 1
   // >8 -> 0
 };
-
 let globalData = {
   matches: [], 
   teams: {},   
@@ -113,7 +110,7 @@ let uidToName = {};
 let currentLang = localStorage.getItem('lang') || 'es';
 let selectedDay = 'day1'; 
 let currentTeamDetailId = null; 
-
+// --- TRADUCCIONES ---
 const translations = {
   es: {
     title: "PMCC FALL 2025 — SEMIFINALES / FINALES",
@@ -256,29 +253,24 @@ const translations = {
     playerStats: "Player Statistics"
   }
 };
-
 function t(key, ...args) {
   let str = translations[currentLang][key] || key;
   if (typeof str === 'function') str = str(...args);
   return str;
 }
-
 function setLanguage(lang) {
   if (!['es', 'en'].includes(lang)) return;
   currentLang = lang;
   localStorage.setItem('lang', lang);
-
   document.querySelector('h1').textContent = t('title');
   document.querySelector('.day-selector .btn[data-day="day1"]').textContent = t('day1');
   document.querySelector('.day-selector .btn[data-day="day2"]').textContent = t('day2');
-
   document.querySelector('.tab[data-tab="teams"]').textContent = t('teams');
   document.querySelector('.tab[data-tab="players"]').textContent = t('players');
   document.querySelector('.tab[data-tab="maps"]').textContent = t('maps');
   document.querySelector('.tab[data-tab="highlights"]').textContent = t('highlights');
-
   document.getElementById('back-to-teams').textContent = t('backToTeams');
-
+  // Actualizar captions de tablas de players
   const accCaption = document.querySelector('#players-acc-table caption');
   const finalsCaption = document.querySelector('#players-finals-table caption');
   if (accCaption) {
@@ -287,21 +279,15 @@ function setLanguage(lang) {
   if (finalsCaption) {
     finalsCaption.textContent = t('playersFinals');
   }
-
   const activeTab = document.querySelector('.tab.active')?.dataset.tab;
   if (activeTab) updateTabContent(activeTab);
-
   document.getElementById('lang-es').classList.toggle('active', lang === 'es');
   document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-
+  // 🔥 ACTUALIZAR TÍTULO DEL DETALLE DEL EQUIPO SI ESTÁ VISIBLE
   if (currentTeamDetailId && document.getElementById("team-detail")?.classList.contains("active")) {
-    const team = globalData.teams[currentTeamDetailId];
-    if (currentTeamDetailId && document.getElementById("team-detail")?.classList.contains("active")) {
-  renderTeamDetail(currentTeamDetailId);
-}
+    renderTeamDetail(currentTeamDetailId);
   }
 }
-
 function updateTabContent(tabId) {
   switch (tabId) {
     case 'teams':
@@ -336,7 +322,7 @@ function updateTabContent(tabId) {
       break;
   }
 }
-
+// --- UTILIDADES ---
 function parseTime(timeStr) {
   if (!timeStr || timeStr === "0m 0s" || timeStr === "") return 0;
   const clean = timeStr.replace(/\s+/g, " ").trim();
@@ -345,30 +331,32 @@ function parseTime(timeStr) {
   const secs = parts[1] ? parseInt(parts[1].replace(/\D/g, "")) || 0 : 0;
   return mins * 60 + secs;
 }
-
 function secondsToTime(secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return `${m}m ${s}s`;
 }
-
 function getLobbyAndMapInfo(filename) {
   const match = filename.match(/M(\d)/i);
   if (!match) return { lobby: 1, map: "Unknown", matchNum: 0 };
   const num = parseInt(match[1]);
+  // PARA DAY2: tratar como un único lobby
+  if (selectedDay === 'day2') {
+    const mapNum = ((num - 1) % 4) + 1; // M1=1, M2=2, M3=3, M4=4, M5=1, M6=2, M7=3, M8=4
+    return { lobby: 1, map: MAP_NAMES[mapNum] || `Map ${mapNum}`, matchNum: num };
+  }
+  // Para day1: comportamiento original
   const lobby = num <= 4 ? 1 : 2;
   const mapNum = num <= 4 ? num : num - 4;
   return { lobby, map: MAP_NAMES[mapNum] || `Map ${mapNum}`, matchNum: num };
 }
-
 function isQualifiedTeamId(teamId) {
   return QUALIFIED_TEAM_IDS.includes(Number(teamId));
 }
-
 function compId(lobby, teamId) { 
   return `${lobby}-${teamId}`; 
 }
-
+// --- CARGA DEL MAPEO UID → NOMBRE CLARO ---
 async function loadUidNameMap() {
   try {
     const response = await fetch("uid-name.csv");
@@ -391,18 +379,15 @@ async function loadUidNameMap() {
     console.error("Error loading uid-name.csv", err);
   }
 }
-
+// --- CARGA PRINCIPAL ---
 async function loadDay(day = 'day1') {
   selectedDay = day;
   globalData = { matches: [], teams: {}, players: {} };
-  
   if (day === 'day1') {
     day1Data = { matches: [], teams: {}, players: {} };
   }
-  
   const Papa = window.Papa;
   const files = DAY_FILES[day] || [];
-  
   for (const file of files) {
     try {
       const response = await fetch(file);
@@ -416,11 +401,9 @@ async function loadDay(day = 'day1') {
         console.warn("Empty file:", file); 
         continue; 
       }
-
       const { lobby, map, matchNum } = getLobbyAndMapInfo(file);
       const match = { day, matchNum, lobby, map, teams: {}, players: [], rows: result.data };
       globalData.matches.push(match);
-
       for (const row of result.data) {
         const safeNum = (val) => (val === "" || val == null || isNaN(val)) ? 0 : Number(val);
         const numFields = [
@@ -430,15 +413,12 @@ async function loadDay(day = 'day1') {
           "Bajas con Granada", "Rescates", "Distancia Conducida", "Distancia Recorrida"
         ];
         for (const field of numFields) row[field] = safeNum(row[field]);
-
         const teamIdRaw = row["TeamID"];
         const compTeamId = compId(match.lobby, teamIdRaw);
         const uidFromMatch = (row["uId"] || "").toString().trim();
         const compPlayerId = uidFromMatch;
-        
         const fase = day === 'day1' ? 'semifinales' : 'finales';
         const teamName = getTeamName(fase, match.lobby, teamIdRaw);
-
         if (!match.teams[compTeamId]) {
           match.teams[compTeamId] = {
             name: teamName,
@@ -453,7 +433,6 @@ async function loadDay(day = 'day1') {
         team.damage += row["Daño"];
         team.rank = row["Rango"]; 
         team.players.push(row);
-
         if (!globalData.players[compPlayerId]) {
           const playerName = uidToName[uidFromMatch] || row["Nombre del Jugador"] || "Unknown";
           globalData.players[compPlayerId] = {
@@ -484,27 +463,26 @@ async function loadDay(day = 'day1') {
         p.knocks += row["Noqueos"];
         p.oobTime += parseTime(row["Tiempo Fuera del Círculo Azul"]);
         p.matches += 1;
-
         if (!p.byMap[match.map]) p.byMap[match.map] = { kills: 0, damage: 0, maxDist: 0 };
         p.byMap[match.map].kills += row["Número de Bajas"];
         p.byMap[match.map].damage += row["Daño"];
         p.byMap[match.map].maxDist = Math.max(p.byMap[match.map].maxDist, row["Máxima Distancia de Baja"]);
-
         match.players.push(row);
       }
     } catch (err) {
       console.error("Error processing file:", file, err);
     }
   }
-
   if (day === 'day1') {
     day1Data = JSON.parse(JSON.stringify(globalData));
+    aggregateTeams();
+  } else {
+    // DAY2: Procesar como un único lobby de 16 equipos
+    aggregateTeamsDay2();
   }
 
-  aggregateTeams();
   renderAll();
 }
-
 function aggregateTeams() {
   globalData.teams = {};
   for (const match of globalData.matches) {
@@ -541,7 +519,64 @@ function aggregateTeams() {
     t.total = t.totalKills + t.positionPoints;
   }
 }
-
+// NUEVA FUNCIÓN: Agregación especial para day2 (único lobby)
+function aggregateTeamsDay2() {
+  globalData.teams = {};
+  
+  // Procesar todos los partidos del día 2
+  for (const match of globalData.matches) {
+    for (const [id, t] of Object.entries(match.teams)) {
+      const teamIdNum = Number(id.split("-")[1]);
+      if (!isQualifiedTeamId(teamIdNum)) continue;
+      
+      // Usar teamId como clave única (sin lobby)
+      const teamKey = teamIdNum.toString();
+      
+      if (!globalData.teams[teamKey]) {
+        globalData.teams[teamKey] = {
+          id: teamKey,
+          lobby: 1, // Lobby único
+          teamId: teamIdNum,
+          name: t.name,
+          totalKills: 0,
+          totalDamage: 0,
+          top1: 0,
+          positionPoints: 0,
+          ranks: [],
+          matches: 0,
+          lastPosition: null
+        };
+      }
+      
+      const g = globalData.teams[teamKey];
+      g.totalKills += t.kills;
+      g.totalDamage += t.damage;
+      g.ranks.push(t.rank);
+      g.matches += 1;
+      if (t.rank === 1) g.top1 += 1;
+      const pts = POSITION_POINTS[t.rank] || 0;
+      g.positionPoints += pts;
+      g.lastPosition = t.rank;
+    }
+  }
+  
+  // Calcular totales
+  for (const t of Object.values(globalData.teams)) {
+    t.total = t.totalKills + t.positionPoints;
+  }
+  
+  // También actualizar jugadores para usar teamId único
+  const updatedPlayers = {};
+  for (const [playerId, player] of Object.entries(globalData.players)) {
+    const teamIdNum = Number(player.compTeamId.split("-")[1]);
+    if (isQualifiedTeamId(teamIdNum)) {
+      player.compTeamId = teamIdNum.toString();
+      player.team = getTeamName('finales', null, teamIdNum);
+      updatedPlayers[playerId] = player;
+    }
+  }
+  globalData.players = updatedPlayers;
+}
 function renderAll() {
   renderTeams();
   renderPlayers();
@@ -549,31 +584,25 @@ function renderAll() {
   const activeMapBtn = document.querySelector('.map-btn.active');
   if (activeMapBtn) renderMapSection(activeMapBtn.dataset.map);
   setupEventListeners(); 
-  
   updateSectionTitles();
-  
   if (currentTeamDetailId && document.getElementById("team-detail").classList.contains("active")) {
     renderTeamDetail(currentTeamDetailId);
   }
 }
-
 function updateSectionTitles() {
   const mapsTitle = document.querySelector('#maps h2');
   if (mapsTitle) {
     mapsTitle.textContent = selectedDay === 'day1' ? t('statsByMapDay1') : t('statsByMapDay2');
   }
-  
   const highlightsTitle = document.querySelector('#highlights h2');
   if (highlightsTitle) {
     highlightsTitle.textContent = selectedDay === 'day1' ? t('highlightsDay1') : t('highlightsDay2');
   }
 }
-
 function renderTeams() {
   const tbody = document.getElementById("teams-body");
   if (!tbody) return;
   tbody.innerHTML = "";
-
   const teamsArr = Object.values(globalData.teams);
   teamsArr.sort((a, b) => {
     if (b.total !== a.total) return b.total - a.total;
@@ -584,14 +613,15 @@ function renderTeams() {
     const bLast = b.lastPosition || 999;
     return aLast - bLast;
   });
-
   teamsArr.forEach((team, idx) => {
     const tr = document.createElement("tr");
     tr.setAttribute("data-team-id", team.id);
     tr.style.cursor = "pointer";
+    // En day2, no mostrar lobby
+    const lobbySuffix = selectedDay === 'day2' ? '' : ` <small>(L${team.lobby})</small>`;
     tr.innerHTML = `
       <td>${idx + 1}</td>
-      <td>${team.name} <small>(L${team.lobby})</small></td>
+      <td>${team.name}${lobbySuffix}</td>
       <td>${team.totalKills}</td>
       <td>${team.positionPoints}</td>
       <td>${team.total}</td>
@@ -600,31 +630,27 @@ function renderTeams() {
     tbody.appendChild(tr);
   });
 }
-
 function renderPlayers() {
   const tbodyAcc = document.getElementById("players-acc-body");
   const tbodyFinals = document.getElementById("players-finals-body");
   const finalsTableWrapper = document.querySelector('#players-finals-table').closest('.players-table-wrapper');
-  
   if (!tbodyAcc || !tbodyFinals || !finalsTableWrapper) return;
   tbodyAcc.innerHTML = "";
   tbodyFinals.innerHTML = "";
-
   if (selectedDay === 'day1') {
     finalsTableWrapper.style.display = 'none';
     const accCaption = document.querySelector('#players-acc-table caption');
     if (accCaption) accCaption.textContent = t('playersSemifinals');
-    
     const accPlayers = Object.values(globalData.players)
       .filter(p => isQualifiedTeamId(Number(p.compTeamId.split("-")[1])))
       .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
-
     accPlayers.forEach(player => {
       const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
+      const lobbySuffix = selectedDay === 'day2' ? '' : ` <small>(L${player.lobby})</small>`;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${player.name}</td>
-        <td>${player.team} <small>(L${player.lobby})</small></td>
+        <td>${player.team}${lobbySuffix}</td>
         <td>${player.kills}</td>
         <td>${player.damage}</td>
         <td>${hsPct}%</td>
@@ -640,24 +666,20 @@ function renderPlayers() {
     if (finalsCaption) finalsCaption.textContent = t('playersFinals');
 
     const combinedPlayers = {};
-    
     Object.values(day1Data.players).forEach(player => {
       if (!isQualifiedTeamId(Number(player.compTeamId.split("-")[1]))) return;
-      
       combinedPlayers[player.compPlayerId] = {
         name: player.name,
         team: player.team,
-        lobby: player.lobby,
         kills: player.kills,
         damage: player.damage,
         headshots: player.headshots,
         maxDistance: player.maxDistance
       };
     });
-    
+
     Object.values(globalData.players).forEach(player => {
-      if (!isQualifiedTeamId(Number(player.compTeamId.split("-")[1]))) return;
-      
+      if (!isQualifiedTeamId(Number(player.compTeamId))) return;
       if (combinedPlayers[player.compPlayerId]) {
         combinedPlayers[player.compPlayerId].kills += player.kills;
         combinedPlayers[player.compPlayerId].damage += player.damage;
@@ -670,7 +692,6 @@ function renderPlayers() {
         combinedPlayers[player.compPlayerId] = {
           name: player.name,
           team: player.team,
-          lobby: player.lobby,
           kills: player.kills,
           damage: player.damage,
           headshots: player.headshots,
@@ -681,13 +702,12 @@ function renderPlayers() {
 
     const accPlayers = Object.values(combinedPlayers)
       .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
-
     accPlayers.forEach(player => {
       const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${player.name}</td>
-        <td>${player.team} <small>(L${player.lobby})</small></td>
+        <td>${player.team}</td>
         <td>${player.kills}</td>
         <td>${player.damage}</td>
         <td>${hsPct}%</td>
@@ -697,15 +717,14 @@ function renderPlayers() {
     });
 
     const finalsPlayers = Object.values(globalData.players)
-      .filter(p => isQualifiedTeamId(Number(p.compTeamId.split("-")[1])))
+      .filter(p => isQualifiedTeamId(Number(p.compTeamId)))
       .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
-
     finalsPlayers.forEach(player => {
       const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${player.name}</td>
-        <td>${player.team} <small>(L${player.lobby})</small></td>
+        <td>${player.team}</td>
         <td>${player.kills}</td>
         <td>${player.damage}</td>
         <td>${hsPct}%</td>
@@ -715,19 +734,16 @@ function renderPlayers() {
     });
   }
 }
-
 function renderHighlights() {
   const container = document.getElementById("highlights-list");
   const aggregateDiv = document.getElementById("highlights-aggregate");
   container.innerHTML = "";
   aggregateDiv.innerHTML = "";
-
   const dayMatches = globalData.matches.filter(m => m.day === selectedDay);
   if (dayMatches.length === 0) {
     container.innerHTML = `<p>${t('noData')}</p>`;
     return;
   }
-
   const mapBuckets = {};
   for (const match of dayMatches) {
     const mapKey = match.map;
@@ -749,7 +765,6 @@ function renderHighlights() {
       mapBuckets[mapKey].players.push({...row, lobby: match.lobby, teamNameOverride: teamName});
     }
   }
-
   for (const [mapKey, bucket] of Object.entries(mapBuckets)) {
     const teamsArr = Object.values(bucket.teams);
     let mvt = null;
@@ -775,38 +790,29 @@ function renderHighlights() {
     let grenade = playersArr.length ? playersArr.reduce((a,b) => a.grenadeKills > b.grenadeKills ? a : b) : null;
     let assist = playersArr.length ? playersArr.reduce((a,b) => a.assists > b.assists ? a : b) : null;
     let knock = playersArr.length ? playersArr.reduce((a,b) => a.knocks > b.knocks ? a : b) : null;
-
     let html = `<div class="highlight-card">`;
     html += `<strong>${mapKey}</strong>`;
-    
     if (mvt) {
       html += `<div style="margin-top: 8px;"><strong>${t('mvt')}:</strong> ${mvt.name || 'N/A'} — ${mvt.kills} elim. | ${mvt.damage} dmg</div>`;
     }
-    
     if (mvp) {
       html += `<div><strong>${t('mvp')}:</strong> ${mvp.name} (${mvp.team}) — ${mvp.kills} elim. | ${mvp.damage} dmg</div>`;
     }
-    
     if (longest && longest.maxDistance > 0) {
       html += `<div><strong>${t('longestKill')}:</strong> ${longest.maxDistance}m — ${longest.name} (${longest.team})</div>`;
     }
-    
     if (grenade && grenade.grenadeKills > 0) {
       html += `<div><strong>${t('grenadeKills')}:</strong> ${grenade.grenadeKills} — ${grenade.name} (${grenade.team})</div>`;
     }
-    
     if (assist && assist.assists > 0) {
       html += `<div><strong>${t('assists')}:</strong> ${assist.assists} — ${assist.name} (${assist.team})</div>`;
     }
-    
     if (knock && knock.knocks > 0) {
       html += `<div><strong>${t('knocks')}:</strong> ${knock.knocks} — ${knock.name} (${knock.team})</div>`;
     }
-    
     html += `</div>`;
     container.innerHTML += html;
   }
-
   const aggPlayers = {};
   const aggTeams = {};
   for (const match of dayMatches) {
@@ -833,32 +839,26 @@ function renderHighlights() {
     return scoreB - scoreA;
   })[0];
   const mvtAgg = Object.values(aggTeams).sort((a,b) => (b.kills + b.damage/1000) - (a.kills + a.damage/1000))[0];
-
   let aggHtml = "";
   if (mvpAgg) aggHtml += `<div class="highlight-card"><strong>MVP:</strong><br>${mvpAgg.name} (${mvpAgg.team}) — ${mvpAgg.kills} elim. | ${mvpAgg.damage} dmg | ${mvpAgg.headshots} HS</div>`;
   if (mvtAgg) aggHtml += `<div class="highlight-card"><strong>MVT:</strong><br>${mvtAgg.name} — ${mvtAgg.kills} elim. | ${mvtAgg.damage} dmg</div>`;
   aggregateDiv.innerHTML = aggHtml;
 }
-
 function renderMapSection(mapFilter) {
   const container = document.getElementById("map-stats");
   container.innerHTML = "";
-
   const dayMatches = globalData.matches.filter(m => m.day === selectedDay);
   if (dayMatches.length === 0) {
     container.innerHTML = `<p>${t('noData')}</p>`;
     return;
   }
-
   const matches = dayMatches.filter(m => m.map === mapFilter);
   if (matches.length === 0) {
     container.innerHTML = `<p>${t('noMapData', mapFilter)}</p>`;
     return;
   }
-
   const mapTeams = {};
   const mapPlayers = {};
-
   for (const match of matches) {
     for (const [id, team] of Object.entries(match.teams)) {
       const teamNum = Number(id.split("-")[1]);
@@ -879,87 +879,88 @@ function renderMapSection(mapFilter) {
       mapPlayers[key].maxDist = Math.max(mapPlayers[key].maxDist, row["Máxima Distancia de Baja"] || 0);
     }
   }
-
   const teamsArray = Object.values(mapTeams).sort((a,b) => b.kills - a.kills).slice(0, 20);
   let html = `<h3>${t('topTeamsInMap', mapFilter)}</h3><table class="data-table"><thead><tr><th>${t('team')}</th><th>${t('eliminations')}</th><th>${t('damage')}</th></tr></thead><tbody>`;
   teamsArray.forEach(t => {
-    html += `<tr><td>${t.name} <small>(L${t.lobby})</small></td><td>${t.kills}</td><td>${t.damage}</td></tr>`;
+    const lobbySuffix = selectedDay === 'day2' ? '' : ` <small>(L${t.lobby})</small>`;
+    html += `<tr><td>${t.name}${lobbySuffix}</td><td>${t.kills}</td><td>${t.damage}</td></tr>`;
   });
   html += `</tbody></table>`;
-
   const topPlayers = Object.values(mapPlayers).sort((a,b) => b.kills - a.kills).slice(0, 20);
   html += `<h3>${t('topPlayersInMap', mapFilter)}</h3><table class="data-table"><thead><tr><th>${t('player')}</th><th>${t('team')}</th><th>${t('eliminations')}</th><th>${t('damage')}</th><th>${t('longestElim')}</th></tr></thead><tbody>`;
   topPlayers.forEach(p => {
-    html += `<tr><td>${p.name}</td><td>${p.team} <small>(L${p.lobby})</small></td><td>${p.kills}</td><td>${p.damage}</td><td>${p.maxDist}m</td></tr>`;
+    const lobbySuffix = selectedDay === 'day2' ? '' : ` <small>(L${p.lobby})</small>`;
+    html += `<tr><td>${p.name}</td><td>${p.team}${lobbySuffix}</td><td>${p.kills}</td><td>${p.damage}</td><td>${p.maxDist}m</td></tr>`;
   });
   html += `</tbody></table>`;
   container.innerHTML = html;
 }
-
 function renderTeamDetail(teamId) {
   const team = globalData.teams[teamId];
   if (!team) { 
     console.warn("Team not found:", teamId); 
     return; 
   }
-
   currentTeamDetailId = teamId;
-
   document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
   document.getElementById("team-detail").classList.add("active");
-
-  document.getElementById("team-detail-title").textContent = `${t('teamDetails')}: ${team.name} (L${team.lobby})`;
-
-  const matchesOfTeam = globalData.matches.filter(match => Object.keys(match.teams).includes(teamId));
+  // En day2, no mostrar lobby
+  const lobbySuffix = selectedDay === 'day2' ? '' : ` (L${team.lobby})`;
+  document.getElementById("team-detail-title").textContent = `${t('teamDetails')}: ${team.name}${lobbySuffix}`;
+  const matchesOfTeam = globalData.matches.filter(match => {
+    if (selectedDay === 'day2') {
+      const teamIdNum = team.teamId;
+      return match.rows.some(row => Number(row["TeamID"]) === teamIdNum);
+    } else {
+      return Object.keys(match.teams).includes(teamId);
+    }
+  });
   if (matchesOfTeam.length === 0) {
     document.getElementById("team-player-stats").innerHTML = `<p>${t('noMatchesForTeam')}</p>`;
     return;
   }
-
   let html = `<h3>${t('teamPlayerStats')}</h3>`;
-  
   const playerStats = {};
-  
   const allTeamPlayers = new Set();
   matchesOfTeam.forEach(match => {
-    const teamData = match.teams[teamId];
-    if (teamData && teamData.players) {
-      teamData.players.forEach(player => {
-        const uid = (player["uId"] || "").toString().trim();
-        const playerName = uidToName[uid] || player["Nombre del Jugador"] || "Unknown";
-        allTeamPlayers.add(playerName);
-        
-        if (!playerStats[playerName]) {
-          playerStats[playerName] = {
-            name: playerName,
-            matches: 0,
-            kills: 0,
-            damage: 0,
-            headshots: 0,
-            maxDistance: 0,
-            grenadeKills: 0,
-            assists: 0,
-            knocks: 0,
-            revives: 0
-          };
-        }
-        
-        playerStats[playerName].matches += 1;
-        playerStats[playerName].kills += player["Número de Bajas"] || 0;
-        playerStats[playerName].damage += player["Daño"] || 0;
-        playerStats[playerName].headshots += player["Número de Headshots"] || 0;
-        playerStats[playerName].maxDistance = Math.max(playerStats[playerName].maxDistance, player["Máxima Distancia de Baja"] || 0);
-        playerStats[playerName].grenadeKills += player["Bajas con Granada"] || 0;
-        playerStats[playerName].assists += player["Asistencias"] || 0;
-        playerStats[playerName].knocks += player["Noqueos"] || 0;
-        playerStats[playerName].revives += player["Rescates"] || 0;
-      });
-    }
+    const matchedPlayers = match.rows.filter(row => {
+      if (selectedDay === 'day2') {
+        return Number(row["TeamID"]) === team.teamId;
+      } else {
+        return `${match.lobby}-${row["TeamID"]}` === teamId;
+      }
+    });
+    matchedPlayers.forEach(player => {
+      const uid = (player["uId"] || "").toString().trim();
+      const playerName = uidToName[uid] || player["Nombre del Jugador"] || "Unknown";
+      allTeamPlayers.add(playerName);
+      if (!playerStats[playerName]) {
+        playerStats[playerName] = {
+          name: playerName,
+          matches: 0,
+          kills: 0,
+          damage: 0,
+          headshots: 0,
+          maxDistance: 0,
+          grenadeKills: 0,
+          assists: 0,
+          knocks: 0,
+          revives: 0
+        };
+      }
+      playerStats[playerName].matches += 1;
+      playerStats[playerName].kills += player["Número de Bajas"] || 0;
+      playerStats[playerName].damage += player["Daño"] || 0;
+      playerStats[playerName].headshots += player["Número de Headshots"] || 0;
+      playerStats[playerName].maxDistance = Math.max(playerStats[playerName].maxDistance, player["Máxima Distancia de Baja"] || 0);
+      playerStats[playerName].grenadeKills += player["Bajas con Granada"] || 0;
+      playerStats[playerName].assists += player["Asistencias"] || 0;
+      playerStats[playerName].knocks += player["Noqueos"] || 0;
+      playerStats[playerName].revives += player["Rescates"] || 0;
+    });
   });
-
   const playerStatsArray = Object.values(playerStats).sort((a, b) => b.kills - a.kills);
-  
   html += `<table class="data-table"><thead><tr>
     <th>${t('playerName')}</th>
     <th>${t('matchesPlayed')}</th>
@@ -974,11 +975,9 @@ function renderTeamDetail(teamId) {
     <th>${t('knocksAbbr')}</th>
     <th>${t('revives')}</th>
   </tr></thead><tbody>`;
-  
   playerStatsArray.forEach(player => {
     const avgKills = player.matches > 0 ? (player.kills / player.matches).toFixed(1) : "0";
     const avgDamage = player.matches > 0 ? (player.damage / player.matches).toFixed(0) : "0";
-    
     html += `<tr>
       <td>${player.name}</td>
       <td>${player.matches}</td>
@@ -994,14 +993,17 @@ function renderTeamDetail(teamId) {
       <td>${player.revives}</td>
     </tr>`;
   });
-  
   html += `</tbody></table>`;
-  
   html += `<h3>${t('teamStatsByMatch')}</h3>`;
-
   matchesOfTeam.forEach((match, idx) => {
     const map = match.map;
-    const matchPlayers = match.players.filter(p => `${match.lobby}-${p["TeamID"]}` === teamId);
+    const matchPlayers = match.rows.filter(row => {
+      if (selectedDay === 'day2') {
+        return Number(row["TeamID"]) === team.teamId;
+      } else {
+        return `${match.lobby}-${row["TeamID"]}` === teamId;
+      }
+    });
     html += `<h4>${t('match', idx + 1)} - ${map}</h4>`;
     html += `<table class="data-table"><thead><tr>
       <th>${t('playerName')}</th><th>${t('kills')}</th><th>${t('damage')}</th><th>${t('maxDist')}</th><th>${t('assistsAbbr')}</th><th>${t('knocksAbbr')}</th><th>${t('hs')}</th>
@@ -1012,34 +1014,26 @@ function renderTeamDetail(teamId) {
     });
     html += `</tbody></table><br>`;
   });
-
   document.getElementById("team-player-stats").innerHTML = html;
 }
-
 function setupEventListeners() {
   document.getElementById('lang-es')?.addEventListener('click', () => setLanguage('es'));
   document.getElementById('lang-en')?.addEventListener('click', () => setLanguage('en'));
-
   document.querySelectorAll(".tab").forEach(btn => {
     btn.addEventListener("click", tabClickHandler);
   });
-
   document.querySelectorAll(".day-selector .btn").forEach(btn => {
     btn.addEventListener('click', dayClickHandler);
   });
-
   document.querySelectorAll(".map-btn").forEach(btn => {
     btn.addEventListener('click', mapBtnHandler);
   });
-
-  // Event listener para las filas de equipos
   document.getElementById("teams-body")?.addEventListener("click", (e) => {
     const row = e.target.closest("tr[data-team-id]");
     if (row && row.dataset.teamId) {
       renderTeamDetail(row.dataset.teamId);
     }
   });
-
   document.getElementById("back-to-teams")?.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
@@ -1048,7 +1042,6 @@ function setupEventListeners() {
     renderTeams();
   });
 }
-
 function tabClickHandler(evt) {
   document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
@@ -1066,7 +1059,6 @@ function tabClickHandler(evt) {
     renderPlayers();
   }
 }
-
 function dayClickHandler(evt) {
   const btn = evt.currentTarget;
   document.querySelectorAll(".day-selector .btn").forEach(b => b.classList.remove("active"));
@@ -1074,14 +1066,13 @@ function dayClickHandler(evt) {
   const day = btn.dataset.day;
   loadDay(day);
 }
-
 function mapBtnHandler(evt) {
   document.querySelectorAll(".map-btn").forEach(b => b.classList.remove("active"));
   const btn = evt.currentTarget;
   btn.classList.add("active");
   renderMapSection(btn.dataset.map);
 }
-
+// --- INICIO ---
 document.addEventListener("DOMContentLoaded", async () => {
   if (typeof Papa === "undefined") {
     const script = document.createElement("script");
