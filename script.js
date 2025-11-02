@@ -59,7 +59,7 @@ const TEAM_NAMES = {
     6: "Seneca (B)",
     7: "Seneca (A)",
     8: "Portage",
-    9: "Alabama (A)",
+    9: "Alabama",
     10: "Coquitlam",
     11: "Canada West",
     12: "Kent State",
@@ -67,7 +67,7 @@ const TEAM_NAMES = {
     14: "Middlesex County (B)",
     15: "Red River",
     16: "Algoma",
-    17: "Alabama (B)",
+    17: "Seneca (C)",
     18: "Vancouver CC"
   }
 };
@@ -103,6 +103,11 @@ let globalData = {
   matches: [], 
   teams: {},   
   players: {}  
+};
+let day1Data = {
+  matches: [],
+  teams: {},
+  players: {}
 };
 let uidToName = {};
 let currentLang = localStorage.getItem('lang') || 'es';
@@ -390,6 +395,11 @@ async function loadUidNameMap() {
 async function loadDay(day = 'day1') {
   selectedDay = day;
   globalData = { matches: [], teams: {}, players: {} };
+  
+  if (day === 'day1') {
+    day1Data = { matches: [], teams: {}, players: {} };
+  }
+  
   const Papa = window.Papa;
   const files = DAY_FILES[day] || [];
   
@@ -424,7 +434,7 @@ async function loadDay(day = 'day1') {
         const teamIdRaw = row["TeamID"];
         const compTeamId = compId(match.lobby, teamIdRaw);
         const uidFromMatch = (row["uId"] || "").toString().trim();
-        const compPlayerId = compId(match.lobby, uidFromMatch);
+        const compPlayerId = uidFromMatch;
         
         const fase = day === 'day1' ? 'semifinales' : 'finales';
         const teamName = getTeamName(fase, match.lobby, teamIdRaw);
@@ -485,6 +495,10 @@ async function loadDay(day = 'day1') {
     } catch (err) {
       console.error("Error processing file:", file, err);
     }
+  }
+
+  if (day === 'day1') {
+    day1Data = JSON.parse(JSON.stringify(globalData));
   }
 
   aggregateTeams();
@@ -600,62 +614,93 @@ function renderPlayers() {
     finalsTableWrapper.style.display = 'none';
     const accCaption = document.querySelector('#players-acc-table caption');
     if (accCaption) accCaption.textContent = t('playersSemifinals');
+    
+    const accPlayers = Object.values(globalData.players)
+      .filter(p => isQualifiedTeamId(Number(p.compTeamId.split("-")[1])))
+      .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
+
+    accPlayers.forEach(player => {
+      const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${player.name}</td>
+        <td>${player.team} <small>(L${player.lobby})</small></td>
+        <td>${player.kills}</td>
+        <td>${player.damage}</td>
+        <td>${hsPct}%</td>
+        <td>${player.maxDistance}m</td>
+      `;
+      tbodyAcc.appendChild(tr);
+    });
   } else {
     finalsTableWrapper.style.display = 'block';
     const accCaption = document.querySelector('#players-acc-table caption');
     const finalsCaption = document.querySelector('#players-finals-table caption');
     if (accCaption) accCaption.textContent = t('playersAccumulated');
     if (finalsCaption) finalsCaption.textContent = t('playersFinals');
-  }
 
-  const accPlayers = Object.values(globalData.players)
-    .filter(p => isQualifiedTeamId(Number(p.compTeamId.split("-")[1])))
-    .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
-
-  accPlayers.forEach(player => {
-    const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${player.name}</td>
-      <td>${player.team} <small>(L${player.lobby})</small></td>
-      <td>${player.kills}</td>
-      <td>${player.damage}</td>
-      <td>${hsPct}%</td>
-      <td>${player.maxDistance}m</td>
-    `;
-    tbodyAcc.appendChild(tr);
-  });
-
-  if (selectedDay === 'day2') {
-    const finalsPlayersAgg = {};
-    for (const match of globalData.matches.filter(m => m.day === 'day2')) {
-      for (const row of match.rows) {
-        const lid = match.lobby;
-        const uid = (row["uId"] || "").toString().trim();
-        const compPid = compId(lid, uid);
-        const teamIdNum = Number(row["TeamID"]);
-        if (!isQualifiedTeamId(teamIdNum)) continue;
-        const teamName = getTeamName('finales', lid, teamIdNum);
-        if (!finalsPlayersAgg[compPid]) {
-          finalsPlayersAgg[compPid] = {
-            name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown",
-            team: teamName,
-            lobby: lid,
-            kills: 0,
-            damage: 0,
-            headshots: 0,
-            maxDistance: 0
-          };
-        }
-        const p = finalsPlayersAgg[compPid];
-        p.kills += row["Número de Bajas"] || 0;
-        p.damage += row["Daño"] || 0;
-        p.headshots += row["Número de Headshots"] || 0;
-        p.maxDistance = Math.max(p.maxDistance, row["Máxima Distancia de Baja"] || 0);
+    const combinedPlayers = {};
+    
+    Object.values(day1Data.players).forEach(player => {
+      if (!isQualifiedTeamId(Number(player.compTeamId.split("-")[1]))) return;
+      
+      combinedPlayers[player.compPlayerId] = {
+        name: player.name,
+        team: player.team,
+        lobby: player.lobby,
+        kills: player.kills,
+        damage: player.damage,
+        headshots: player.headshots,
+        maxDistance: player.maxDistance
+      };
+    });
+    
+    Object.values(globalData.players).forEach(player => {
+      if (!isQualifiedTeamId(Number(player.compTeamId.split("-")[1]))) return;
+      
+      if (combinedPlayers[player.compPlayerId]) {
+        combinedPlayers[player.compPlayerId].kills += player.kills;
+        combinedPlayers[player.compPlayerId].damage += player.damage;
+        combinedPlayers[player.compPlayerId].headshots += player.headshots;
+        combinedPlayers[player.compPlayerId].maxDistance = Math.max(
+          combinedPlayers[player.compPlayerId].maxDistance, 
+          player.maxDistance
+        );
+      } else {
+        combinedPlayers[player.compPlayerId] = {
+          name: player.name,
+          team: player.team,
+          lobby: player.lobby,
+          kills: player.kills,
+          damage: player.damage,
+          headshots: player.headshots,
+          maxDistance: player.maxDistance
+        };
       }
-    }
+    });
 
-    Object.values(finalsPlayersAgg).sort((a,b) => b.kills - a.kills || b.damage - a.damage).forEach(player => {
+    const accPlayers = Object.values(combinedPlayers)
+      .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
+
+    accPlayers.forEach(player => {
+      const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${player.name}</td>
+        <td>${player.team} <small>(L${player.lobby})</small></td>
+        <td>${player.kills}</td>
+        <td>${player.damage}</td>
+        <td>${hsPct}%</td>
+        <td>${player.maxDistance}m</td>
+      `;
+      tbodyAcc.appendChild(tr);
+    });
+
+    const finalsPlayers = Object.values(globalData.players)
+      .filter(p => isQualifiedTeamId(Number(p.compTeamId.split("-")[1])))
+      .sort((a,b) => b.kills - a.kills || b.damage - a.damage);
+
+    finalsPlayers.forEach(player => {
       const hsPct = player.kills > 0 ? Math.round((player.headshots / player.kills) * 100) : 0;
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -697,7 +742,7 @@ function renderHighlights() {
     }
     for (const row of match.rows) {
       const uid = (row["uId"] || "").toString().trim();
-      const compPid = compId(match.lobby, uid);
+      const compPid = uid;
       const teamIdNum = Number(row["TeamID"]);
       if (!isQualifiedTeamId(teamIdNum)) continue;
       const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, teamIdNum);
@@ -712,7 +757,7 @@ function renderHighlights() {
     const playersAgg = {};
     for (const p of bucket.players) {
       const uid = (p["uId"] || "").toString().trim();
-      const key = `${p.lobby}-${uid}`;
+      const key = uid;
       const name = uidToName[uid] || p["Nombre del Jugador"] || "Unknown";
       const teamName = p.teamNameOverride || getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', p.lobby, p["TeamID"]);
       if (!playersAgg[key]) playersAgg[key] = { name, team: teamName, kills:0, damage:0, headshots:0, grenadeKills:0, assists:0, knocks:0, maxDistance:0 };
@@ -767,7 +812,7 @@ function renderHighlights() {
   for (const match of dayMatches) {
     for (const row of match.rows) {
       const uid = (row["uId"] || "").toString().trim();
-      const key = `${match.lobby}-${uid}`;
+      const key = uid;
       if (!isQualifiedTeamId(Number(row["TeamID"]))) continue;
       const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, row["TeamID"]);
       if (!aggPlayers[key]) aggPlayers[key] = { name: uidToName[uid] || row["Nombre del Jugador"] || "Unknown", team: teamName, kills:0, damage:0, headshots:0 };
@@ -824,7 +869,7 @@ function renderMapSection(mapFilter) {
     }
     for (const row of match.rows) {
       const uid = (row["uId"] || "").toString().trim();
-      const key = `${match.lobby}-${uid}`;
+      const key = uid;
       const teamNum = Number(row["TeamID"]);
       if (!isQualifiedTeamId(teamNum)) continue;
       const teamName = getTeamName(selectedDay === 'day1' ? 'semifinales' : 'finales', match.lobby, teamNum);
@@ -987,6 +1032,7 @@ function setupEventListeners() {
     btn.addEventListener('click', mapBtnHandler);
   });
 
+  // Event listener para las filas de equipos
   document.getElementById("teams-body")?.addEventListener("click", (e) => {
     const row = e.target.closest("tr[data-team-id]");
     if (row && row.dataset.teamId) {
@@ -1049,5 +1095,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUidNameMap();
   loadDay(selectedDay); 
 });
-
-
